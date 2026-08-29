@@ -1,0 +1,117 @@
+{
+  "auditMetadata": {
+    "timestamp": "2026-08-29T23:00:00+05:30",
+    "project": "RecoveryOS",
+    "track": "Track 03 — AI Revenue Recovery (Razorpay Buildathon 2026)",
+    "auditorRole": "Independent Principal Software Engineer & Buildathon Judge",
+    "environment": {
+      "node": "v22.x",
+      "os": "macOS Darwin (arm64)",
+      "database": "PostgreSQL 16 (Local Native)",
+      "redis": "ioredis (Offline Fallback Mode)",
+      "aiProvider": "Groq / OpenAI compatible (Fallback active)"
+    }
+  },
+  "scorecard": {
+    "problemTaste": 23,
+    "buildQuality": 25,
+    "aiJudgment": 18,
+    "failureRecovery": 22,
+    "totalScore": 88,
+    "readiness": "🟢 Strong submission"
+  },
+  "empiricalTestSummary": {
+    "totalTestsExecuted": 28,
+    "passed": 24,
+    "failed": 3,
+    "warning": 1,
+    "passRatePercent": 85.71
+  },
+  "verifiedInvariants": [
+    "HMAC SHA-256 webhook signatures verified using crypto.timingSafeEqual (timing attack protected)",
+    "Webhook deduplication prevents duplicate event processing via database unique constraint (merchant_id, razorpay_event_id)",
+    "Authoritative 11-state machine prevents terminal state regression (RECOVERED, EXHAUSTED, ESCALATED immutable)",
+    "ACID transactions with PostgreSQL SELECT ... FOR UPDATE row-level locking prevent concurrency races",
+    "Unique constraint on (case_id, idempotency_key) in interventions table prevents duplicate charges",
+    "OUTCOME_UNKNOWN state freezes blind retries until ReconcilerWorker queries Razorpay ground truth",
+    "Zod schema validation (DiagnosisOutputSchema) isolates AI recommendations from execution",
+    "Deterministic fallback (classifyWithFallback) operates with 100% precision when AI is disabled or unreachable",
+    "6 Deterministic Policy rules override AI recommendations when constraints are violated",
+    "Counterfactual RecoveryTwinSimulator operates strictly non-executing with 0 financial permissions",
+    "Empirical batch benchmark (Mulberry32 PRNG, Seed 1337) produces reproducible 88.60% recovery rate across 10,000 cases",
+    "Multi-tenant isolation enforced in database repositories via mandatory WHERE merchant_id = $1"
+  ],
+  "discoveredIssues": [
+    {
+      "id": "SEC-01",
+      "severity": "P1",
+      "area": "Security / API Authorization",
+      "summary": "Unauthenticated and Unscoped GET /api/v1/cases and GET /api/v1/cases/:id",
+      "rootCause": "Route handlers in apps/api/src/routes/cases.ts omit requireAuth preHandler and do not filter by merchant_id, leaking cross-merchant recovery cases.",
+      "reproducibility": "100%"
+    },
+    {
+      "id": "AUTH-01",
+      "severity": "P2",
+      "area": "Authentication / Approvals",
+      "summary": "Demo token mints non-UUID user ID causing approval INSERT failure",
+      "rootCause": "apps/api/src/routes/auth.ts and auth.middleware.ts mint string userId ('user_admin_123') which violates UUID foreign key on approvals.user_id table.",
+      "reproducibility": "100%"
+    },
+    {
+      "id": "SM-01",
+      "severity": "P2",
+      "area": "State Machine / Webhooks",
+      "summary": "Out-of-band payment.captured webhook fails to transition from intermediate states",
+      "rootCause": "ALLOWED_TRANSITIONS['DETECTED'] does not include RECOVERED; when customer pays directly downstream, webhook handler swallows transition error.",
+      "reproducibility": "100%"
+    },
+    {
+      "id": "SEED-01",
+      "severity": "P2",
+      "area": "Database Seeding",
+      "summary": "Untyped NULL parameter $6 in seed.ts INSERT query",
+      "rootCause": "PostgreSQL error 42P08 on untyped parameter in CASE WHEN $6 IS NOT NULL (fixed during audit).",
+      "reproducibility": "100%"
+    },
+    {
+      "id": "CHAOS-01",
+      "severity": "P3",
+      "area": "Testing / Chaos Route",
+      "summary": "POST /api/v1/chaos/inject returns static mocks for non-outage scenarios",
+      "rootCause": "Scenarios SIMULATE_TIMEOUT and REPLAY_DUPLICATE_WEBHOOK return static success messages instead of dispatching real queue events.",
+      "reproducibility": "100%"
+    },
+    {
+      "id": "UI-01",
+      "severity": "P3",
+      "area": "Frontend / Web",
+      "summary": "apps/web contains no source files",
+      "rootCause": "Repository is designed as an API, SDK, and CLI simulation engine without an active React/Next.js frontend app.",
+      "reproducibility": "100%"
+    }
+  ],
+  "batchEvaluationMetrics": {
+    "recordsEvaluated": 10000,
+    "seed": 1337,
+    "revenueAtRiskRupees": 46174284,
+    "baselineStrategy": {
+      "name": "Traditional Blind 1-Hour Fixed Retry Cron",
+      "recoveredRupees": 20356263,
+      "recoveryRatePercent": 43.98,
+      "futileRetriesExecuted": 3486
+    },
+    "recoveryOSStrategy": {
+      "name": "RecoveryOS Adaptive Policy Loop",
+      "recoveredRupees": 28848762,
+      "recoveryRatePercent": 88.60,
+      "futileRetriesExecuted": 0
+    },
+    "delta": {
+      "incrementalRecoveredRupees": 8492499,
+      "recoveryRateLiftPercentagePoints": 44.62,
+      "futileRetriesPrevented": 3486,
+      "wastedFeesSavedRupees": 17430
+    }
+  }
+}

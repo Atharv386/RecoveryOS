@@ -1,0 +1,36 @@
+{
+  "name": "@recoveryos/api",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./dist/server.js",
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc --noEmit",
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@fastify/cors": "^10.0.2",
+    "@fastify/helmet": "^13.0.1",
+    "@fastify/rate-limit": "^10.2.2",
+    "@recoveryos/ai-diagnosis": "*",
+    "@recoveryos/db": "*",
+    "@recoveryos/policy-engine": "*",
+    "@recoveryos/razorpay-adapter": "*",
+    "@recoveryos/simulator": "*",
+    "@recoveryos/state-machine": "*",
+    "bullmq": "^5.41.6",
+    "dotenv": "^16.4.7",
+    "fastify": "^5.2.1",
+    "ioredis": "^5.6.0",
+    "pg": "^8.13.3",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.9",
+    "@types/pg": "^8.11.11",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.7"
+  }
+}

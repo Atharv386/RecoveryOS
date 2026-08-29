@@ -1,0 +1,12 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/db" },
+    { "path": "./packages/state-machine" },
+    { "path": "./packages/policy-engine" },
+    { "path": "./packages/ai-diagnosis" },
+    { "path": "./packages/razorpay-adapter" },
+    { "path": "./packages/simulator" },
+    { "path": "./apps/api" }
+  ]
+}
