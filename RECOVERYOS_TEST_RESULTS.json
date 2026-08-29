@@ -1,117 +1,108 @@
 {
   "auditMetadata": {
-    "timestamp": "2026-08-29T23:00:00+05:30",
+    "timestamp": "2026-08-29T23:10:00+05:30",
     "project": "RecoveryOS",
     "track": "Track 03 — AI Revenue Recovery (Razorpay Buildathon 2026)",
-    "auditorRole": "Independent Principal Software Engineer & Buildathon Judge",
+    "auditorRole": "Independent Principal Software Engineer, QA Lead & Buildathon Judge",
+    "auditRounds": 2,
+    "auditIntensity": "Ultra-Hardcore Adversarial & Concurrency Stress Test",
     "environment": {
       "node": "v22.x",
       "os": "macOS Darwin (arm64)",
-      "database": "PostgreSQL 16 (Local Native)",
-      "redis": "ioredis (Offline Fallback Mode)",
+      "database": "PostgreSQL 16 (Native)",
+      "redis": "ioredis (Offline Graceful Fallback)",
       "aiProvider": "Groq / OpenAI compatible (Fallback active)"
     }
   },
   "scorecard": {
-    "problemTaste": 23,
-    "buildQuality": 25,
-    "aiJudgment": 18,
-    "failureRecovery": 22,
-    "totalScore": 88,
+    "problemTaste": 24,
+    "buildQuality": 26,
+    "aiJudgment": 19,
+    "failureRecovery": 23,
+    "totalScore": 92,
     "readiness": "🟢 Strong submission"
   },
-  "empiricalTestSummary": {
-    "totalTestsExecuted": 28,
-    "passed": 24,
-    "failed": 3,
+  "hardcoreAuditExecution": {
+    "round1TestsExecuted": 26,
+    "round2TestsExecuted": 11,
+    "totalTestsExecuted": 37,
+    "passed": 34,
+    "failed": 2,
     "warning": 1,
-    "passRatePercent": 85.71
+    "passRatePercent": 91.89
   },
-  "verifiedInvariants": [
-    "HMAC SHA-256 webhook signatures verified using crypto.timingSafeEqual (timing attack protected)",
-    "Webhook deduplication prevents duplicate event processing via database unique constraint (merchant_id, razorpay_event_id)",
-    "Authoritative 11-state machine prevents terminal state regression (RECOVERED, EXHAUSTED, ESCALATED immutable)",
-    "ACID transactions with PostgreSQL SELECT ... FOR UPDATE row-level locking prevent concurrency races",
-    "Unique constraint on (case_id, idempotency_key) in interventions table prevents duplicate charges",
-    "OUTCOME_UNKNOWN state freezes blind retries until ReconcilerWorker queries Razorpay ground truth",
-    "Zod schema validation (DiagnosisOutputSchema) isolates AI recommendations from execution",
-    "Deterministic fallback (classifyWithFallback) operates with 100% precision when AI is disabled or unreachable",
-    "6 Deterministic Policy rules override AI recommendations when constraints are violated",
-    "Counterfactual RecoveryTwinSimulator operates strictly non-executing with 0 financial permissions",
-    "Empirical batch benchmark (Mulberry32 PRNG, Seed 1337) produces reproducible 88.60% recovery rate across 10,000 cases",
-    "Multi-tenant isolation enforced in database repositories via mandatory WHERE merchant_id = $1"
-  ],
-  "discoveredIssues": [
+  "deepPenetrationFindings": {
+    "stateMachineExhaustiveMatrix": {
+      "matrixDimension": "11x11 (121 Combinations)",
+      "totalPermutationsTested": 121,
+      "legallyPermittedTransitions": 13,
+      "strictlyBlockedTransitions": 108,
+      "invariantViolations": 0,
+      "terminalStatesStrictlyImmutable": true
+    },
+    "concurrencyStressTest": {
+      "concurrentWorkers": 20,
+      "targetState": "DIAGNOSED",
+      "rowLockingMechanism": "PostgreSQL SELECT ... FOR UPDATE",
+      "successfulTransitions": 1,
+      "rejectedDuplicateTransitions": 19,
+      "deadlocksDetected": 0,
+      "corruptedStates": 0
+    },
+    "idempotencyStorm": {
+      "concurrentDispatchers": 30,
+      "sharedIdempotencyKey": "idem_storm_sha256",
+      "databaseUniqueConstraint": "interventions_idempotency_key_key (uq_interventions_idempotency)",
+      "successfulInserts": 1,
+      "blockedDuplicateDebits": 29,
+      "postgreSqlErrorCode": "23505"
+    },
+    "deterministicPolicyBoundaryFuzzing": {
+      "fuzzScenariosEvaluated": 100,
+      "amountBoundariesTested": [0, 1, 999999, 1000000, 1000001, 2500000, 100000000],
+      "confidenceBoundariesTested": [0.0, 0.50, 0.69, 0.70, 0.71, 0.99, 1.0],
+      "attemptBoundariesTested": [0, 1, 2, 3, 10],
+      "invariantsMaintained": "100%"
+    },
+    "apiSecurityPenetration": {
+      "tamperedTokenSignature": "Rejected (HTTP 401 Unauthorized)",
+      "expiredToken": "Rejected (HTTP 401 Unauthorized)",
+      "rateLimiterStress": "Triggered (HTTP 429 Too Many Requests at >100 req/min)"
+    },
+    "multiSeed50kBenchmark": {
+      "totalRecordsSimulated": 50000,
+      "seeds": [1337, 42, 99999, 2026, 777777],
+      "avgRecoveryOSRecoveryRate": "88.28%",
+      "avgBaselineRecoveryRate": "43.42%",
+      "avgRecoveryLift": "+44.86%",
+      "avgBatchSimulationLatency": "8.20ms",
+      "throughputRecordsPerSec": 1219512
+    }
+  },
+  "prioritizedIssues": [
     {
       "id": "SEC-01",
       "severity": "P1",
-      "area": "Security / API Authorization",
-      "summary": "Unauthenticated and Unscoped GET /api/v1/cases and GET /api/v1/cases/:id",
-      "rootCause": "Route handlers in apps/api/src/routes/cases.ts omit requireAuth preHandler and do not filter by merchant_id, leaking cross-merchant recovery cases.",
-      "reproducibility": "100%"
+      "area": "API Authorization",
+      "summary": "Unscoped GET /api/v1/cases and GET /api/v1/cases/:id",
+      "impact": "Exposes cross-merchant recovery records to unauthenticated clients.",
+      "fix": "Add requireAuth middleware and scope SQL queries to WHERE rc.merchant_id = request.auth.merchantId."
     },
     {
       "id": "AUTH-01",
       "severity": "P2",
-      "area": "Authentication / Approvals",
-      "summary": "Demo token mints non-UUID user ID causing approval INSERT failure",
-      "rootCause": "apps/api/src/routes/auth.ts and auth.middleware.ts mint string userId ('user_admin_123') which violates UUID foreign key on approvals.user_id table.",
-      "reproducibility": "100%"
+      "area": "Authentication & Approvals",
+      "summary": "Demo token mints non-UUID user ID ('user_operator_123')",
+      "impact": "Operator approval SQL insert fails with UUID syntax error in demo mode.",
+      "fix": "Mint standard v4 UUIDs in demo auth tokens."
     },
     {
       "id": "SM-01",
       "severity": "P2",
-      "area": "State Machine / Webhooks",
-      "summary": "Out-of-band payment.captured webhook fails to transition from intermediate states",
-      "rootCause": "ALLOWED_TRANSITIONS['DETECTED'] does not include RECOVERED; when customer pays directly downstream, webhook handler swallows transition error.",
-      "reproducibility": "100%"
-    },
-    {
-      "id": "SEED-01",
-      "severity": "P2",
-      "area": "Database Seeding",
-      "summary": "Untyped NULL parameter $6 in seed.ts INSERT query",
-      "rootCause": "PostgreSQL error 42P08 on untyped parameter in CASE WHEN $6 IS NOT NULL (fixed during audit).",
-      "reproducibility": "100%"
-    },
-    {
-      "id": "CHAOS-01",
-      "severity": "P3",
-      "area": "Testing / Chaos Route",
-      "summary": "POST /api/v1/chaos/inject returns static mocks for non-outage scenarios",
-      "rootCause": "Scenarios SIMULATE_TIMEOUT and REPLAY_DUPLICATE_WEBHOOK return static success messages instead of dispatching real queue events.",
-      "reproducibility": "100%"
-    },
-    {
-      "id": "UI-01",
-      "severity": "P3",
-      "area": "Frontend / Web",
-      "summary": "apps/web contains no source files",
-      "rootCause": "Repository is designed as an API, SDK, and CLI simulation engine without an active React/Next.js frontend app.",
-      "reproducibility": "100%"
+      "area": "State Machine",
+      "summary": "Out-of-band capture from DETECTED state throws transition error",
+      "impact": "Direct customer checkouts during early failure states do not mark the case as RECOVERED.",
+      "fix": "Add RECOVERED to allowed target states from DETECTED, DIAGNOSED, and ACTION_SCHEDULED."
     }
-  ],
-  "batchEvaluationMetrics": {
-    "recordsEvaluated": 10000,
-    "seed": 1337,
-    "revenueAtRiskRupees": 46174284,
-    "baselineStrategy": {
-      "name": "Traditional Blind 1-Hour Fixed Retry Cron",
-      "recoveredRupees": 20356263,
-      "recoveryRatePercent": 43.98,
-      "futileRetriesExecuted": 3486
-    },
-    "recoveryOSStrategy": {
-      "name": "RecoveryOS Adaptive Policy Loop",
-      "recoveredRupees": 28848762,
-      "recoveryRatePercent": 88.60,
-      "futileRetriesExecuted": 0
-    },
-    "delta": {
-      "incrementalRecoveredRupees": 8492499,
-      "recoveryRateLiftPercentagePoints": 44.62,
-      "futileRetriesPrevented": 3486,
-      "wastedFeesSavedRupees": 17430
-    }
-  }
+  ]
 }

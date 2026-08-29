@@ -1,5 +1,10 @@
 import { Queue, Worker, Processor } from 'bullmq';
 import IORedis from 'ioredis';
+import { getDatabasePool } from '@recoveryos/db';
+import { DiagnosisWorker } from '../workers/diagnosis.worker.js';
+import { PolicyWorker } from '../workers/policy.worker.js';
+import { RecoveryExecutionWorker } from '../workers/recovery-execution.worker.js';
+import { ReconcilerWorker } from '../workers/reconciler.worker.js';
 
 export interface QueueJobPayloads {
   'diagnosis-queue': {
@@ -104,7 +109,23 @@ export class QueueManager {
         removeOnFail: 100
       });
     } catch {
-      console.warn(`[QueueManager] Could not enqueue to ${queueName} (Redis offline). Running in offline fallback.`);
+      // In dev mode without Redis, dispatch job to worker asynchronously in background
+      setTimeout(async () => {
+        try {
+          const pool = getDatabasePool();
+          if (queueName === 'diagnosis-queue') {
+            await DiagnosisWorker.processJob(pool, data as any);
+          } else if (queueName === 'policy-queue') {
+            await PolicyWorker.processJob(pool, data as any);
+          } else if (queueName === 'recovery-execution-queue') {
+            await RecoveryExecutionWorker.processJob(pool, data as any);
+          } else if (queueName === 'reconciliation-queue') {
+            await ReconcilerWorker.processJob(pool, data as any);
+          }
+        } catch (err) {
+          console.error(`[DevDirectWorker] Error processing ${queueName}:`, err);
+        }
+      }, options?.delayMs || 10);
     }
   }
 

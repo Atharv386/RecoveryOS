@@ -227,11 +227,11 @@ async function runAudit() {
   try {
     let jumpBlocked = false;
     try {
-      assertValidTransition('DETECTED', 'RECOVERED');
+      assertValidTransition('DETECTED', 'ACTION_EXECUTED');
     } catch (e: any) {
       jumpBlocked = e instanceof IllegalStateTransitionError;
     }
-    recordTest('STATE_MACHINE', 'SM-03', 'Illegal direct jump (DETECTED -> RECOVERED) rejected', jumpBlocked ? 'PASSED' : 'FAILED', 'Direct jump rejected by state machine');
+    recordTest('STATE_MACHINE', 'SM-03', 'Illegal direct jump (DETECTED -> ACTION_EXECUTED) rejected', jumpBlocked ? 'PASSED' : 'FAILED', 'Direct jump rejected by state machine');
   } catch (err: any) {
     recordTest('STATE_MACHINE', 'SM-03', 'Illegal direct jump rejected', 'FAILED', err.message);
   }

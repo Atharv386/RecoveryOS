@@ -192,7 +192,8 @@ export async function seedDatabase(): Promise<void> {
           `INSERT INTO interventions (
              case_id, policy_decision_id, action_type, idempotency_key, status, razorpay_reference_id
            )
-           VALUES ($1, $2, 'PAYMENT_LINK', 'idem_seed_${i}', 'SUCCESS', 'plink_seed_${i}')`,
+           VALUES ($1, $2, 'PAYMENT_LINK', 'idem_seed_${i}', 'SUCCESS', 'plink_seed_${i}')
+           ON CONFLICT (idempotency_key) DO NOTHING`,
           [caseId, polId]
         );
       }
