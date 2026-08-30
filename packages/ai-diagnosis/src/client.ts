@@ -157,21 +157,35 @@ export class AIDiagnosisService {
   }
 
   /**
-   * Directly queries the Groq API for ultra-fast Llama 3.3 70B inference.
+   * Queries Groq or OpenRouter API for ultra-fast Llama 3.3 70B inference.
    */
   public async callGroq(prompt: string): Promise<string> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.config.timeoutMs);
 
+    const apiKey = this.config.apiKey || process.env.OPENROUTER_API_KEY || process.env.GROQ_API_KEY;
+    const model = this.config.modelName || process.env.AI_MODEL_NAME || 'meta-llama/llama-3.3-70b-instruct';
+    
+    // Determine provider endpoint
+    const isOpenRouter = apiKey?.startsWith('sk-or-v1-') || model.startsWith('meta-llama/') || model.startsWith('google/') || !!process.env.OPENROUTER_API_KEY && !apiKey?.startsWith('gsk_');
+    const endpoint = process.env.AI_BASE_URL || (isOpenRouter ? 'https://openrouter.ai/api/v1/chat/completions' : 'https://api.groq.com/openai/v1/chat/completions');
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    };
+
+    if (isOpenRouter) {
+      headers['HTTP-Referer'] = 'https://recoveryos.dev';
+      headers['X-Title'] = 'RecoveryOS';
+    }
+
     try {
-      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      const res = await fetch(endpoint, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.config.apiKey}`
-        },
+        headers,
         body: JSON.stringify({
-          model: this.config.modelName || 'openai/gpt-oss-20b',
+          model,
           messages: [
             {
               role: 'system',
@@ -182,14 +196,14 @@ export class AIDiagnosisService {
               content: prompt
             }
           ],
-          max_tokens: 350,
+          max_tokens: 1200,
           temperature: 0.1
         }),
         signal: controller.signal
       });
 
       if (!res.ok) {
-        throw new Error(`Groq API returned HTTP ${res.status}: ${await res.text()}`);
+        throw new Error(`AI API (${endpoint}) returned HTTP ${res.status}: ${await res.text()}`);
       }
 
       const data = await res.json() as { choices: Array<{ message: { content: string } }> };
