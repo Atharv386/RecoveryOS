@@ -106,9 +106,20 @@ export const dashboardRoutes: FastifyPluginAsync = async (fastify: FastifyInstan
         </div>
       </div>
 
-      <div class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-xs font-semibold tracking-wide">
+      <div class="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs font-semibold tracking-wide">
         <span>Autonomous Recovery for</span>
-        <span class="font-extrabold text-slate-900 dark:text-white tracking-tight text-sm">Razorpay</span>
+        
+        <!-- Light Theme Razorpay Logo -->
+        <svg class="h-4.5 dark:hidden" viewBox="0 0 115 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12.8 2.2L3.2 21.8H0L9.6 2.2H12.8ZM16.9 2.2L12.1 12H16L20.8 2.2H16.9Z" fill="#0C2340"/>
+          <text x="24" y="17.5" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="16" fill="#0C2340" letter-spacing="-0.4">Razorpay</text>
+        </svg>
+
+        <!-- Dark Theme Razorpay Logo -->
+        <svg class="h-4.5 hidden dark:block" viewBox="0 0 115 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12.8 2.2L3.2 21.8H0L9.6 2.2H12.8ZM16.9 2.2L12.1 12H16L20.8 2.2H16.9Z" fill="#3395FF"/>
+          <text x="24" y="17.5" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="16" fill="#FFFFFF" letter-spacing="-0.4">Razorpay</text>
+        </svg>
       </div>
 
       <div class="w-32 h-1 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden mt-2">
@@ -126,7 +137,7 @@ export const dashboardRoutes: FastifyPluginAsync = async (fastify: FastifyInstan
     <aside class="w-64 sidebar-surface flex flex-col justify-between p-4 shrink-0 hidden md:flex min-h-screen sticky top-0 h-screen">
       
       <div class="space-y-6">
-        <!-- Brand Header with Razorpay Title -->
+        <!-- Brand Header with Razorpay Logo below Title -->
         <div class="px-2 pt-1 space-y-1">
           <div class="flex items-center gap-2.5">
             <div class="flex size-7 items-center justify-center rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-mono text-sm font-bold shadow-xs">
@@ -137,9 +148,16 @@ export const dashboardRoutes: FastifyPluginAsync = async (fastify: FastifyInstan
           </div>
           
           <!-- Razorpay Sub-badge -->
-          <div class="pl-9.5 flex items-center gap-1 pt-0.5">
+          <div class="pl-9.5 flex items-center gap-1.5 pt-0.5">
             <span class="text-[10px] text-slate-400 font-medium">for</span>
-            <span class="text-xs font-bold tracking-tight text-slate-800 dark:text-slate-200">Razorpay</span>
+            <svg class="h-3.5 dark:hidden" viewBox="0 0 115 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12.8 2.2L3.2 21.8H0L9.6 2.2H12.8ZM16.9 2.2L12.1 12H16L20.8 2.2H16.9Z" fill="#0C2340"/>
+              <text x="24" y="17.5" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="16" fill="#0C2340" letter-spacing="-0.4">Razorpay</text>
+            </svg>
+            <svg class="h-3.5 hidden dark:block" viewBox="0 0 115 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12.8 2.2L3.2 21.8H0L9.6 2.2H12.8ZM16.9 2.2L12.1 12H16L20.8 2.2H16.9Z" fill="#3395FF"/>
+              <text x="24" y="17.5" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="16" fill="#FFFFFF" letter-spacing="-0.4">Razorpay</text>
+            </svg>
           </div>
         </div>
 
