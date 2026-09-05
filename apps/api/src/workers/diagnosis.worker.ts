@@ -10,9 +10,9 @@ import { QueueJobPayloads, QueueManager } from '../queues/queue-manager.js';
 export class DiagnosisWorker {
   private static aiService = new AIDiagnosisService({
     enabled: process.env.AI_ENABLED !== 'false',
-    apiKey: process.env.GROQ_API_KEY || process.env.AI_API_KEY,
-    timeoutMs: Number(process.env.AI_TIMEOUT_MS) || 3000,
-    modelName: process.env.AI_MODEL_NAME || 'llama-3.3-70b-versatile'
+    apiKey: process.env.OPENROUTER_API_KEY || process.env.GROQ_API_KEY || process.env.AI_API_KEY,
+    timeoutMs: Number(process.env.AI_TIMEOUT_MS) || 6000,
+    modelName: process.env.AI_MODEL_NAME || 'meta-llama/llama-3.3-70b-instruct'
   });
 
   public static async processJob(

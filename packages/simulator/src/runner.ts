@@ -52,14 +52,36 @@ export class RecoveryTwinSimulator {
       if (decision.verdict === 'APPROVED' || decision.verdict === 'DOWNGRADED') {
         interventionsScheduled++;
 
-        // Model outcome deterministically based on ground truth probabilities
+        // Model outcome deterministically based on ground truth probabilities and policy sensitivity
         let isRecovered = false;
         if (decision.actionType === 'DELAYED_RETRY') {
-          // Delay matching cooling window improves success
-          const coolingBonus = decision.delayMinutes >= 360 ? 0.15 : 0.0;
-          isRecovered = record.groundTruth.retrySuccessProbability + coolingBonus >= 0.50;
+          // Dynamic cooling window effect: accounts need time to replenish funds
+          const coolingHours = policy.cooling_window_hours;
+          let coolingFactor = 0.0;
+          if (coolingHours >= 6) {
+            coolingFactor = 0.28; // High recovery boost for proper cooling window
+          } else if (coolingHours >= 3) {
+            coolingFactor = 0.10;
+          } else if (coolingHours >= 2) {
+            coolingFactor = -0.05;
+          } else {
+            coolingFactor = -0.35; // Severe penalty for futile immediate 1h retry
+          }
+
+          let retryBudgetBonus = 0.0;
+          if (policy.max_retry_attempts >= 3) {
+            retryBudgetBonus = 0.18;
+          } else if (policy.max_retry_attempts === 2) {
+            retryBudgetBonus = 0.08;
+          } else {
+            retryBudgetBonus = -0.18;
+          }
+
+          const adjustedProb = record.groundTruth.retrySuccessProbability + coolingFactor + retryBudgetBonus;
+          isRecovered = adjustedProb >= 0.45;
         } else if (decision.actionType === 'PAYMENT_LINK') {
-          isRecovered = record.groundTruth.paymentLinkSuccessProbability >= 0.50;
+          const consentBonus = record.consent?.whatsapp ? 0.15 : 0.0;
+          isRecovered = (record.groundTruth.paymentLinkSuccessProbability + consentBonus) >= 0.48;
         }
 
         if (isRecovered) {

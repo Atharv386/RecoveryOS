@@ -13,6 +13,9 @@ import { metricsRoutes } from './routes/metrics.js';
 import { approvalRoutes } from './routes/approvals.js';
 import { demoRoutes } from './routes/demo.js';
 import { priorityQueueRoutes } from './routes/priority-queue.js';
+import { auditRoutes } from './routes/audit.js';
+import { merchantRoutes } from './routes/merchants.js';
+import { dashboardRoutes } from './routes/dashboard.js';
 
 export async function buildApp(): Promise<FastifyInstance> {
   const fastify = Fastify({
@@ -48,6 +51,9 @@ export async function buildApp(): Promise<FastifyInstance> {
   await fastify.register(simulatorRoutes, { prefix: '/api/v1' });
   await fastify.register(benchmarkRoutes, { prefix: '/api/v1' });
   await fastify.register(demoRoutes, { prefix: '/api/v1' });
+  await fastify.register(auditRoutes, { prefix: '/api/v1' });
+  await fastify.register(merchantRoutes, { prefix: '/api/v1' });
+  await fastify.register(dashboardRoutes);
 
   return fastify;
 }
